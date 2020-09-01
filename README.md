@@ -1,27 +1,17 @@
-# wp-cli-mu-orphan-tables-cleaner
+# wp-cli-sites-info
 
-WP-CLI command for cleaning orphan tables on Wordpress Multisite installations. List, generate drop statements, or drop orphan tables
+WP-CLI command for fetch site info necessary for Teralevel migration.
 
 
 ## Installation
-wp package install mirai-wordpress/wp-cli-mu-orphan-tables-cleaner
+wp package install mirai-wordpress/wp-cli-sites-info
 
 ## Commands
 
 ### List orphan tables
-wp orphan_tables list_tables
-
-### List orphan tables drop statements
-wp orphan_tables list_drops
-
-### List orphan tables drop statements
-wp orphan_tables drop_tables
-
+wp site_info -url=www.hotel-moderno.com
 
 ## Changelog
 
 ### 1.0
 Initial Release
-
-### 1.1
-Added some informative messages
