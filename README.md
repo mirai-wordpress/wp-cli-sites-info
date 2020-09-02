@@ -6,10 +6,9 @@ WP-CLI command for fetch site info necessary for Teralevel migration.
 ## Installation
 wp package install mirai-wordpress/wp-cli-sites-info
 
-## Commands
-
-### List orphan tables
+## Usage
 wp site_info www.hotel-moderno.com
+wp site_info www.hotel-moderno.com www.hospes.com
 
 ## Changelog
 
