@@ -7,8 +7,10 @@ WP-CLI command for fetch site info necessary for Teralevel migration.
 wp package install mirai-wordpress/wp-cli-sites-info
 
 ## Usage
+```
 wp site_info www.hotel-moderno.com
 wp site_info www.hotel-moderno.com www.hospes.com
+```
 
 ## Changelog
 
