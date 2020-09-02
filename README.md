@@ -9,7 +9,7 @@ wp package install mirai-wordpress/wp-cli-sites-info
 ## Commands
 
 ### List orphan tables
-wp site_info -url=www.hotel-moderno.com
+wp site_info www.hotel-moderno.com
 
 ## Changelog
 
