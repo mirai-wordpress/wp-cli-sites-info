@@ -2,7 +2,7 @@
 
 if ( defined( 'WP_CLI' ) && WP_CLI ) {
 
-	class Orphan_Tables extends WP_CLI_Command {
+	class Sites_Info extends WP_CLI_Command {
 
 		protected $db;
 
@@ -10,99 +10,38 @@ if ( defined( 'WP_CLI' ) && WP_CLI ) {
 			$this->db = $GLOBALS['wpdb'];
 		}
 
-		/**
-		 * List or drop orphan tables from Mirai Multisite WP
-		 *
-		 * ## Usage
-		 * $ wp orphan tables list -> lists orphan tables
-		 * $ wp orphan tables list_drops -> lists executable drop commands
-		 * $ wp orphan tables drop -> drops orphan tables
-		 */
-
-		private function get_orphan_tables(){
+		public function __invoke( $args ) {
 
 			if ( ! is_multisite() ) {
 				WP_CLI::error( 'This is not a multisite installation. This command is for multisite only.' );
 			}
 
-			$dbname = $this->db->dbname;
-
-			//get existing blogs IDs
-			$blog_ids = $this->db->get_col( "SELECT blog_id FROM ".$this->db->blogs );
-			
-			$max_blog_id = max($blog_ids);
-			
-			$orphan_tablenames = [];
-
-			//search tables with name prefix containing non-existing blog id's
-			for($i = 1 ; $i < $max_blog_id ; $i++){
-					
-				if( ! in_array($i, $blog_ids)){
-					
-					$tables_like = $dbname."\_".$i."\_";
-					$blog_tables = $this->db->get_col("SELECT table_name FROM information_schema.tables where table_schema='$dbname' AND table_name LIKE '$tables_like%'");
-					
-					foreach($blog_tables as $table)
-						$orphan_tablenames[] = $table;
-				}
-			}
-			if(count($orphan_tablenames)==0)
-			{
-				echo "No orphan tables found!\n";
-				exit;
+			if ( count( $args ) < 1 ) {
+				WP_CLI::error( 'No argument found. Usage: wp sites_info www.hotel-moderno.com' );
 			}
 
-			return $orphan_tablenames;
-		}		
+			$dmtable = $this->db->base_prefix . 'domain_mapping';
 
-		//prints orphan table names in plain text
-		public function list_tables() {
+			$dm_domain = $args[0];
 
-			$i=0;
-			$orphan_tablenames = $this->get_orphan_tables();
-			foreach($orphan_tablenames as $table) {
-				$i++;
-				echo $table."\n";
-			}
-			echo "\n".$i." orphan tables listed.\n";
+			if( ( $nowww = preg_replace( '|^www\.|', '', $dm_domain ) ) != $dm_domain )
+				$where = $this->db->prepare( 'domain IN (%s,%s)', $dm_domain, $nowww );
+			else
+				$where = $this->db->prepare( 'domain = %s', $dm_domain );
 
-		}
+			$site_id = $this->db->get_var( "SELECT blog_id FROM {$dmtable} WHERE {$where} ORDER BY CHAR_LENGTH(domain) DESC LIMIT 1" );
 
-		//prints drop statements for orphan tables
-		public function list_drops() {
+			$options = array(
+			  'return'     => true
+			);
+			$theme = WP_CLI::runcommand( 'option get current_theme --url=' . $args[0], $options );
 
-			$i=0;
-			$orphan_tablenames = $this->get_orphan_tables();
-			foreach($orphan_tablenames as $table){
-				$i++;
-				echo "DROP TABLE ".$table.";\n";
-			}
-			echo "\n".$i." drop statements listed.\n";
-		}
+			$url = WP_CLI::runcommand( 'site list --site__in=' . $site_id . ' --field=url', $options );
 
-		//drops orphan tables
-		public function drop_tables() {
-
-			WP_CLI::confirm( 'BE CAREFUL, a drop statement cannot be undone so please backup your database before proceeding. Are you sure you want to proceed?', $assoc_args = array() );
-
-			$orphan_tablenames = $this->get_orphan_tables();
-			$i=0;
-			$j=0;
-			foreach($orphan_tablenames as $table){
-				if($this->db->query( "DROP TABLE IF EXISTS $table" )){
-					$i++;
-					echo "Succesfully dropped table ".$table."\n";
-				}
-				else{
-					$j++;
-					echo "Could not drop table ".$table."\n";
-				}
-			}
-			if($i > 0) echo "\n".$i." orphan tables were dropped\n";
-			if($j > 0) echo "\n".$j." orphan tables could not be dropped\n";
-
+			$parsed_url = wp_parse_url( $url );
+			echo "$site_id, {$args[0]}, {$parsed_url['host']}, $theme\n";
 		}
 	}
 
-	WP_CLI::add_command( 'orphan_tables', 'Orphan_Tables' );
+	WP_CLI::add_command( 'sites_info', 'Sites_Info' );
 }
