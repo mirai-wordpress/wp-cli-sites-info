@@ -30,16 +30,20 @@ if ( defined( 'WP_CLI' ) && WP_CLI ) {
 				}
 
 				$where   = $this->db->prepare( 'domain = %s', $dm_domain );
-				$site_id = $this->db->get_var( "SELECT blog_id FROM {$dmtable} WHERE {$where} AND active = 1 ORDER BY CHAR_LENGTH(domain) DESC LIMIT 1" );
+				$site_id = $this->db->get_var( "SELECT blog_id FROM {$dmtable} WHERE {$where} ORDER BY CHAR_LENGTH(domain) DESC LIMIT 1" );
 
-				$options = array(
-				  'return' => true,
-				);
-				$theme = WP_CLI::runcommand( 'option get current_theme --url=' . $dm_domain, $options );
-				$url = WP_CLI::runcommand( 'site list --site__in=' . $site_id . ' --field=url', $options );
+				if ( null !== $site_id ) {
+					$options = array(
+					  'return' => true,
+					);
+					$url = WP_CLI::runcommand( 'site list --site__in=' . $site_id . ' --field=url', $options );
+					$theme = WP_CLI::runcommand( 'option get current_theme --url=' . $dm_domain, $options );
+					$parsed_url = wp_parse_url( $url );
+					echo "$site_id, {$dm_domain}, {$parsed_url['host']}, $theme\n";
 
-				$parsed_url = wp_parse_url( $url );
-				echo "$site_id, {$dm_domain}, {$parsed_url['host']}, $theme\n";
+				} else {
+					echo "$dm_domain not found\n";
+				}
 			}
 		}
 	}
