@@ -8,8 +8,8 @@ wp package install mirai-wordpress/wp-cli-sites-info
 
 ## Usage
 ```
-wp site_info www.hotel-moderno.com
-wp site_info www.hotel-moderno.com www.hospes.com
+wp sites_info www.hotel-moderno.com
+wp sites_info www.hotel-moderno.com www.hospes.com
 ```
 
 ## Changelog
